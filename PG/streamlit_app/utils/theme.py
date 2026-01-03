@@ -208,21 +208,26 @@ def apply_theme():
         opacity: 0.9;
     }}
     
-    /* Toggle Switch Visibility Fix */
+    /* Label is now used for the icon 🔆 */
     div[data-testid="stToggle"] label[data-testid="stWidgetLabel"] {{
-        color: {text_color};
-        font-weight: 600;
+        font-size: 18px !important;
+        font-weight: bold;
+        padding-right: 10px;
     }}
-    div[data-testid="stToggle"] span {{
-        color: {text_color};
-    }}
+
     /* The Toggle Track */
-    div[data-testid="stToggle"] div[role="switch"] {{
-        background-color: #cbd5e1 !important; /* Visible Grey */
-        border: 1px solid {card_border};
+    /* The Toggle Track - High Contrast Final Fix */
+    div[role="switch"] {{
+        background-color: #000000 !important; /* Black Track in Light Mode */
+        border: 2px solid #ea580c !important; /* Orange Border for visibility */
     }}
-    div[data-testid="stToggle"] div[role="switch"][aria-checked="true"] {{
-        background-color: #f97316 !important; /* Orange when active */
+    div[role="switch"][aria-checked="true"] {{
+        background-color: #ea580c !important; /* Orange Track in Dark Mode */
+        border: 2px solid #ffffff !important; /* White Border */
+    }}
+    /* Thumb/Handle styling if accessible (Streamlit often uses pseudo-elements or nested divs) */
+    div[role="switch"] p {{
+        background-color: #ffffff !important;
     }}
     
     </style>

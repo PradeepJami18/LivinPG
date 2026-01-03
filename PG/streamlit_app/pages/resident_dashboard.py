@@ -51,7 +51,7 @@ with col1:
 with col2:
     # Theme Toggle
     is_dark = st.session_state.theme == "dark"
-    if st.toggle("Dark Mode", value=is_dark, key="theme_toggle_res"):
+    if st.toggle("🔆", value=is_dark, key="theme_toggle_res"):
         st.session_state.theme = "dark"
     else:
         st.session_state.theme = "light"

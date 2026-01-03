@@ -27,7 +27,7 @@ with col1:
     st.caption("Healthy meals, served on time")
 with col2:
     is_dark = st.session_state.theme == "dark"
-    if st.toggle("Dark Mode", value=is_dark, key="theme_toggle_fr"):
+    if st.toggle("🔆", value=is_dark, key="theme_toggle_fr"):
         st.session_state.theme = "dark"
         st.rerun()
     else:

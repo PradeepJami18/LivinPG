@@ -71,3 +71,22 @@ def delete_user(
     return {"message": "User deleted successfully"}
 
 
+from pydantic import BaseModel
+
+class PasswordReset(BaseModel):
+    email: str
+    new_password: str
+
+@router.put("/reset-password")
+def reset_password(data: PasswordReset, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == data.email).first()
+    
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    db_user.password = hash_password(data.new_password)
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
+
+

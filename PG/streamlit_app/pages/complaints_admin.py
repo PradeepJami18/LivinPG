@@ -32,7 +32,7 @@ with col1:
     st.caption("View and resolve resident issues")
 with col2:
     is_dark = st.session_state.theme == "dark"
-    if st.toggle("Dark Mode", value=is_dark, key="theme_toggle_ca"):
+    if st.toggle("🔆", value=is_dark, key="theme_toggle_ca"):
         st.session_state.theme = "dark"
         st.rerun()
     else:

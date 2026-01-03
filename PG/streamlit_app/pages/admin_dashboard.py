@@ -41,7 +41,7 @@ with col_head1:
 with col_head2:
     # Theme Toggle
     is_dark = st.session_state.theme == "dark"
-    if st.toggle("Dark Mode", value=is_dark, key="theme_toggle_adm"):
+    if st.toggle("🔆", value=is_dark, key="theme_toggle_adm"):
         st.session_state.theme = "dark"
     else:
         st.session_state.theme = "light"

@@ -32,7 +32,7 @@ with col1:
     st.caption("Add or update daily meals")
 with col2:
     is_dark = st.session_state.theme == "dark"
-    if st.toggle("Dark Mode", value=is_dark, key="theme_toggle_fa"):
+    if st.toggle("🔆", value=is_dark, key="theme_toggle_fa"):
         st.session_state.theme = "dark"
         st.rerun()
     else:

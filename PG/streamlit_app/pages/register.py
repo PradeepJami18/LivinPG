@@ -33,7 +33,9 @@ st.markdown(
 col_pad1, col_center, col_pad2 = st.columns([1, 2, 1])
 with col_center:
     try:
-        st.image("streamlit_app/assets/logo.JPG", width=120, use_container_width=False)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(current_dir, "..", "assets", "logo.jpg")
+        st.image(logo_path, width=120, use_container_width=False)
     except:
         st.warning("Logo not found")
 

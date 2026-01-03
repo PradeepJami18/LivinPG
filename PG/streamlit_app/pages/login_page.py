@@ -1,5 +1,6 @@
 import streamlit as st
 import base64
+import os
 from services.auth import login_user
 from utils.theme import apply_theme
 
@@ -21,13 +22,15 @@ def get_base64_of_bin_file(bin_file):
     return base64.b64encode(data).decode()
 
 try:
-    img_base64 = get_base64_of_bin_file("streamlit_app/assets/logo.JPG")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(current_dir, "..", "assets", "logo.jpg")
+    img_base64 = get_base64_of_bin_file(logo_path)
     # Position strictly in center with FIXED size to guarantee text alignment
     bg_style = f"""
     <style>
     .stApp {{
         background-image: url("data:image/jpg;base64,{img_base64}");
-        background-size: 600px auto; /* Fixed width to ensure fit matches margins */
+        background-size: 800px auto; /* Fixed width to ensure fit matches margins */
         background-position: center 60px; /* Fixed top offset */
         background-repeat: no-repeat;
         background-color: #ffffff;
@@ -56,19 +59,20 @@ try:
         margin-bottom: 2px;
     }}
     
-    /* Button Styling */
-    .stButton button {{
+    /* Primary Button (Login) - Orange */
+    .stButton button[kind="primary"] {{
         background-color: #ea580c !important; /* Orange */
         color: white !important;
         border: none !important;
         border-radius: 4px !important;
         font-weight: 600;
-        height: 38px;
+        height: 32px !important; /* Reduced from 38px */
+        font-size: 13px !important; /* Specific font size */
         letter-spacing: 0.5px;
+        margin-top: 2px;
     }}
-    .stButton button:hover {{
+    .stButton button[kind="primary"]:hover {{
         background-color: #c2410c !important;
-        border: none !important;
         box-shadow: 0 4px 6px rgba(234, 88, 12, 0.3);
     }}
     </style>
@@ -116,27 +120,36 @@ st.markdown('<div class="inside-container">', unsafe_allow_html=True)
 st.markdown('<div class="header-text">LIVINPG</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-text">Welcome back! Please login.</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div style="height: 15px;"></div>', unsafe_allow_html=True)
 
 # Form Container (Door)
 col1, col_door, col2 = st.columns([1, 1.4, 1])
 
 with col_door:
+    st.markdown('<div style="height: 10px;"></div>', unsafe_allow_html=True)
     email = st.text_input("Email", placeholder="resident@example.com")
     # Removed spacer
     password = st.text_input("Password", type="password", placeholder="••••••••")
     
     st.write("")
-    
-    if st.button("-> Login", use_container_width=True):
-        if not email or not password:
-            st.warning("⚠️ Enter credentials")
-        else:
-            success = login_user(email, password)
-            if success:
-                st.switch_page("app.py")
+    col_forgot, col_login = st.columns([1.5, 1])
+
+    with col_forgot:
+        st.write("") # Alignment
+        st.page_link("pages/forgot_password.py", label="Forget Password?", icon=None)
+
+    with col_login:
+        if st.button("Login➜]", use_container_width=True, type="primary"):
+            if not email or not password:
+                st.warning("⚠️ Enter credentials")
             else:
-                st.error("❌ Invalid credentials")
+                success = login_user(email, password)
+                if success:
+                    st.switch_page("app.py")
+                else:
+                    st.error("❌ Invalid credentials")
     
+  
     # Removed divider <---
     st.write("") # Tiny gap instead of large divider
     
