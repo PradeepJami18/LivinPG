@@ -19,7 +19,9 @@ if "token" not in st.session_state:
 if st.session_state.role != "resident":
     st.switch_page("pages/admin_dashboard.py")
 
-BASE_URL = "http://127.0.0.1:8000"
+# ---------------- COMPLAINTS (BACKEND) ----------------
+import os
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 HEADERS = {
     "Authorization": f"Bearer {st.session_state.token}"
 }
