@@ -1,2 +1,2 @@
 web: streamlit run streamlit_app/app.py --server.port $PORT --server.address 0.0.0.0
-worker: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+worker: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
