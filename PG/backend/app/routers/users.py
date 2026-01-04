@@ -19,10 +19,14 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         password=hash_password(user.password),
         role=user.role
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
