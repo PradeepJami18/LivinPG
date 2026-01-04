@@ -20,7 +20,7 @@ if st.session_state.role != "admin":
     st.switch_page("pages/resident_dashboard.py")
 
 import os
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+from utils.config import BASE_URL
 HEADERS = {
     "Authorization": f"Bearer {st.session_state.token}"
 }

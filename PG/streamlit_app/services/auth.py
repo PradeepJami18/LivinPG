@@ -1,8 +1,7 @@
 import requests
 import streamlit as st
 
-import os
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")   # backend
+from utils.config import BASE_URL
 
 def login_user(email, password):
     try:

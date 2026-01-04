@@ -39,7 +39,7 @@ st.divider()
 
 # ---------------- FETCH MENU (BACKEND) ----------------
 import os
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+from utils.config import BASE_URL
 
 headers = {
     "Authorization": f"Bearer {st.session_state.token}"

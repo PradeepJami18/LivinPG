@@ -4,7 +4,7 @@ from components.bottom_nav import resident_nav
 from utils.theme import apply_theme
 
 import os
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+from utils.config import BASE_URL
 
 # ---------------- PAGE CONFIG (FIRST) ----------------
 st.set_page_config(

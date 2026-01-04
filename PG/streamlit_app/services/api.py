@@ -1,7 +1,6 @@
 import requests
 
-import os
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+from utils.config import BASE_URL
 
 def register_user(data):
     return requests.post(f"{BASE_URL}/users/register", json=data)
