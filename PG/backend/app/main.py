@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
 from app.routers.users import router as users_router
@@ -8,6 +9,14 @@ from app.routers.foodmenu import router as foodmenu_router
 from app.routers.payments import router as payments_router
 
 app = FastAPI(title="Smart PG Living API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create tables
 Base.metadata.create_all(bind=engine)

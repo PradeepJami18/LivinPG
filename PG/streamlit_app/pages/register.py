@@ -35,7 +35,7 @@ with col_center:
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         logo_path = os.path.join(current_dir, "..", "assets", "logo.jpg")
-        st.image(logo_path, width=120, use_container_width=False)
+        st.image(logo_path, width=120)
     except:
         st.warning("Logo not found")
 
@@ -87,9 +87,10 @@ with st.form("register_form"):
                 st.session_state.registered = True
             else:
                 try:
-                    st.error(response.json().get("detail", "Registration failed"))
+                    error_detail = response.json().get("detail", response.text)
+                    st.error(f"❌ Registration failed: {response.status_code} - {error_detail}")
                 except:
-                    st.error("❌ Registration failed")
+                    st.error(f"❌ Registration failed: {response.status_code} - {response.text}")
 
 # 👉 Navigation button OUTSIDE the form
 if st.session_state.registered:
