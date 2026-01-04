@@ -1,16 +1,22 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
 class UserCreate(BaseModel):
     full_name: str
     email: EmailStr
-    password: str
+    password: str = Field(
+        min_length=6,
+        max_length=64,   
+        description="Password must be 6–64 characters"
+    )
     phone: str
     role: str = "resident"
+
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
 
 class UserResponse(BaseModel):
     id: int
@@ -25,6 +31,7 @@ class ComplaintCreate(BaseModel):
     category: str
     description: str
 
+
 class ComplaintResponse(BaseModel):
     id: int
     category: str
@@ -34,16 +41,18 @@ class ComplaintResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
 class FoodMenuCreate(BaseModel):
     day: str
     breakfast: str
     lunch: str
     dinner: str
 
+
 class PaymentCreate(BaseModel):
     amount: int
     transaction_id: str
-
+    
 class PaymentResponse(BaseModel):
     id: int
     user_id: int
@@ -51,6 +60,6 @@ class PaymentResponse(BaseModel):
     transaction_id: str
     status: str
     created_at: datetime
-    
+
     class Config:
         orm_mode = True
