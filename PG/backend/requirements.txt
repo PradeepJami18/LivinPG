@@ -3,12 +3,13 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 python-dotenv
-pydantic[email]
 passlib==1.7.4
 bcrypt==4.0.1
 python-jose[cryptography]
 python-multipart
+email-validator
 alembic
+requests
 httpx
-
-
+pytest
+ruff
