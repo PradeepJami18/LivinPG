@@ -16,3 +16,6 @@ alembic
 pytest
 httpx
 ruff
+email-validator
+bcrypt
+
