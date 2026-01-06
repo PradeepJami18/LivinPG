@@ -30,21 +30,27 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
+    try:
+        db_user = db.query(User).filter(User.email == user.email).first()
 
-    if not db_user or not verify_password(user.password, db_user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        if not db_user or not verify_password(user.password, db_user.password):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({
-        "user_id": db_user.id,
-        "role": db_user.role
-    })
+        token = create_access_token({
+            "user_id": db_user.id,
+            "role": db_user.role
+        })
 
-    return {
-        "access_token": token,
-        "role": db_user.role,
-        "full_name": db_user.full_name
-    }
+        return {
+            "access_token": token,
+            "role": db_user.role,
+            "full_name": db_user.full_name
+        }
+    except HTTPException:
+        raise 
+    except Exception as e:
+        print(f"LOGIN CRASH: {e}")
+        raise HTTPException(status_code=500, detail=f"Login Crash: {str(e)}")
 
 @router.get("/residents", response_model=list[UserResponse])
 def get_residents(

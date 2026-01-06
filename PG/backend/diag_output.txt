@@ -1,0 +1,6 @@
+Checking Server: https://livinpg-backend.onrender.com
+Root Status: 200
+Response: {"message":"Smart PG Backend Running"}
+
+Attempting Login (Diag)...
+Login Status: 500
