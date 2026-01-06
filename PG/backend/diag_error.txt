@@ -1,0 +1,4 @@
+--- DIAGNOSTIC START ---
+Status: 500
+ERROR DETAILS:
+{"detail":"Login Crash: (psycopg2.errors.UndefinedColumn) column users.status does not exist\nLINE 1: ...s.role AS users_role, users.phone AS users_phone, users.stat...\n                                                             ^\n\n[SQL: SELECT users.id AS users_id, users.full_name AS users_full_name, users.email AS users_email, users.password AS users_password, users.role AS users_role, users.phone AS users_phone, users.status AS users_status, users.created_at AS users_created_at \nFROM users \nWHERE users.email = %(email_1)s \n LIMIT %(param_1)s]\n[parameters: {'email_1': 'admin@example.com', 'param_1': 1}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"}

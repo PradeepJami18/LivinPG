@@ -68,3 +68,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 def root():
     return {"message": "Smart PG Backend Running"}
+
+from sqlalchemy import text
+
+@app.get("/fix-db-schema")
+def fix_db_schema():
+    try:
+        with engine.connect() as conn:
+            # Postgres specific: Add column if not exists
+            # Note: Postgres 9.6+ supports IF NOT EXISTS.
+            # If older, we might need a block. But standard ALTER usually fine if we catch error.
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active';"))
+            conn.commit()
+        return {"message": "Schema Updated: Added 'status' column (if missing)."}
+    except Exception as e:
+        return {"error": str(e)}
