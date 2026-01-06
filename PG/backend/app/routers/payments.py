@@ -118,3 +118,30 @@ def get_dashboard_stats(
         "active_issues": active_issues,
         "total_staff": total_staff
     }
+
+@router.get("/payments/revenue")
+def get_revenue_stats(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    # Group by Month-Year. For MySQL/Postgres this varies. 
+    # Providing a simple Python-side aggregation for safety across DB types if dataset is small, 
+    # or using basic extraction.
+    
+    payments = db.query(Payment).filter(Payment.status == "Approved").all()
+    
+    # Python aggregation
+    monthly_data = {}
+    for p in payments:
+        if not p.created_at: 
+            # Fallback if created_at is missing
+            month = "Unknown"
+        else:
+            month = p.created_at.strftime("%b %Y") # e.g., "Jan 2024"
+        monthly_data[month] = monthly_data.get(month, 0) + p.amount
+        
+    result = [{"month": k, "amount": v} for k, v in monthly_data.items()]
+    return result

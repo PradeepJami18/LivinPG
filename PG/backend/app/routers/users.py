@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import User
+from app.models import User, Complaint, Payment
 from app.schemas import UserCreate, UserLogin, UserResponse
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 
@@ -57,22 +57,7 @@ def get_residents(
         
     return db.query(User).filter(User.role == "resident").all()
 
-@router.delete("/{user_id}")
-def delete_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
-    db.delete(user)
-    db.commit()
-    return {"message": "User deleted successfully"}
+
 
 
 from pydantic import BaseModel
@@ -91,6 +76,49 @@ def reset_password(data: PasswordReset, db: Session = Depends(get_db)):
     db_user.password = hash_password(data.new_password)
     db.commit()
     
+    
     return {"message": "Password updated successfully"}
 
+@router.post("/leave")
+def leave_pg(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "resident":
+        raise HTTPException(status_code=403, detail="Only residents can leave PG")
 
+    user = db.query(User).filter(User.id == current_user["user_id"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.status = "Notice"
+    db.commit()
+    return {"message": "You have successfully marked yourself as leaving (Notice Period)."}
+
+
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    try:
+        # Manually delete dependent records first to be safe, 
+        # although ondelete="CASCADE" in models should handle it.
+        # Sometimes MySQL needs explicit deletion if foreign keys aren't set perfectly.
+        db.query(Complaint).filter(Complaint.user_id == user_id).delete()
+        db.query(Payment).filter(Payment.user_id == user_id).delete()
+        
+        db.delete(user)
+        db.commit()
+        return {"message": "User deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")

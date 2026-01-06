@@ -12,12 +12,14 @@ class User(Base):
     password = Column(String(255))
     role = Column(String(20), default="resident")
     phone = Column(String(15))
+    status = Column(String(20), default="Active") # Active, Left, Notice
+    created_at = Column(DateTime, server_default=func.now())
 
 class Complaint(Base):
     __tablename__ = "complaints"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     category = Column(String(50))
     description = Column(Text)
     status = Column(String(20), default="Pending")
@@ -38,7 +40,7 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     amount = Column(Integer)
     transaction_id = Column(String(100))
     status = Column(String(20), default="Pending")

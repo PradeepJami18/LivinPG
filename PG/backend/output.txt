@@ -1,0 +1,17 @@
+STARTING VERIFICATION...
+2026-01-06 17:20:02,484 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-01-06 17:20:02,484 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-01-06 17:20:02,486 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-01-06 17:20:02,486 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-01-06 17:20:02,487 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-01-06 17:20:02,487 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-01-06 17:20:02,488 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-06 17:20:02,491 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.full_name AS users_full_name, users.email AS users_email, users.password AS users_password, users.`role` AS users_role, users.phone AS users_phone, users.status AS users_status, users.created_at AS users_created_at 
+FROM users 
+WHERE users.email = %(email_1)s 
+ LIMIT %(param_1)s
+2026-01-06 17:20:02,491 INFO sqlalchemy.engine.Engine [generated in 0.00059s] {'email_1': 'admin@example.com', 'param_1': 1}
+User found: ID=1
+General Error: 'charmap' codec can't encode character '\u2705' in position 0: character maps to <undefined>
+2026-01-06 17:20:02,844 INFO sqlalchemy.engine.Engine ROLLBACK
+VERIFICATION DONE.

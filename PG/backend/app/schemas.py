@@ -20,9 +20,11 @@ class UserLogin(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    full_name: str
+    full_name: str | None = None
     email: EmailStr
     role: str
+    status: str | None = "Active"
+    created_at: datetime | None = None
 
     class Config:
         orm_mode = True

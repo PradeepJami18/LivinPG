@@ -26,6 +26,8 @@ app.include_router(users_router)
 app.include_router(complaints_router)
 app.include_router(foodmenu_router)
 app.include_router(payments_router)
+from app.routers.admin import router as admin_router
+app.include_router(admin_router)
 
 # ✅ Swagger Bearer JWT configuration
 def custom_openapi():
@@ -54,6 +56,14 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
+
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Create static directory if not exists
+os.makedirs("static", exist_ok=True)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def root():

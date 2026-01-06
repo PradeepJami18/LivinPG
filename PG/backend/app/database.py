@@ -33,6 +33,14 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
 
 engine = create_engine(DATABASE_URL, echo=True)
 
+# Enable Foreign Keys for SQLite
+if "sqlite" in DATABASE_URL:
+    from sqlalchemy import event
+    def _fk_pragma_on_connect(dbapi_con, con_record):
+        dbapi_con.execute('pragma foreign_keys=ON')
+    
+    event.listen(engine, 'connect', _fk_pragma_on_connect)
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
