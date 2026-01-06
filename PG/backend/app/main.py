@@ -75,11 +75,17 @@ from sqlalchemy import text
 def fix_db_schema():
     try:
         with engine.connect() as conn:
-            # Postgres specific: Add column if not exists
-            # Note: Postgres 9.6+ supports IF NOT EXISTS.
-            # If older, we might need a block. But standard ALTER usually fine if we catch error.
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active';"))
+            # HARD RESET: Drop tables so they are recreated fresh with ALL columns
+            # We use CASCADE to remove dependent tables (complaints, payments) automatically
+            conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+            conn.execute(text("DROP TABLE IF EXISTS complaints CASCADE;"))
+            conn.execute(text("DROP TABLE IF EXISTS payments CASCADE;"))
+            conn.execute(text("DROP TABLE IF EXISTS food_menu CASCADE;"))
             conn.commit()
-        return {"message": "Schema Updated: Added 'status' column (if missing)."}
+        
+        # Recreate everything
+        Base.metadata.create_all(bind=engine)
+        
+        return {"message": "DB HARD RESET: All tables dropped and recreated. Schema is now perfect."}
     except Exception as e:
         return {"error": str(e)}
