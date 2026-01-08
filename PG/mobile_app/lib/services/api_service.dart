@@ -52,6 +52,24 @@ class ApiService {
     return await storage.read(key: 'full_name') ?? 'User';
   }
 
+
+
+  Future<Map<String, dynamic>> getMyProfile() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/users/me');
+    
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load profile');
+    }
+  }
+
   Future<List<dynamic>> getMyComplaints() async {
     final token = await getToken();
     final url = Uri.parse('$baseUrl/complaints/my');
@@ -342,4 +360,101 @@ class ApiService {
       throw Exception('Failed to load revenue');
     }
   }
+
+  Future<List<dynamic>> getMyNotifications() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/notifications/');
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load notifications');
+    }
+  }
+
+  Future<void> markNotificationRead(int id) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/notifications/$id/read');
+    await http.put(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+
+  Future<void> updateMealAttendance(String date, bool breakfast, bool lunch, bool dinner) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/attendance/update');
+    
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'date': date,
+        'breakfast': breakfast,
+        'lunch': lunch,
+        'dinner': dinner
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update attendance');
+    }
+  }
+
+
+  Future<void> clearAllNotifications() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/notifications/');
+    
+    final response = await http.delete(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to clear notifications');
+    }
+  }
+
+  Future<void> deleteFoodMenu(String day) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/food/$day');
+    
+    final response = await http.delete(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete menu: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getDailyMealStats(String date) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/attendance/day-stats?target_date=$date');
+    
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load meal stats');
+    }
+  }
 }
+
+
+

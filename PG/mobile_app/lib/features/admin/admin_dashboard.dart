@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../common/notifications_screen.dart';
+import '../common/notification_bell.dart';
+import 'package:intl/intl.dart';
 // import 'package:fl_chart/fl_chart.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -64,6 +67,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+             // --- NEW: Daily Meal Stats ---
+             _buildDailyMealStats(),
+             const SizedBox(height: 24),
+
             const Text('Overview', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
@@ -121,26 +128,68 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-/*
-  static Widget _bottomTitles(double value, TitleMeta meta) {
-    const style = TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 10);
-    String text;
-    switch (value.toInt()) {
-      case 0: text = 'Oct'; break;
-      case 1: text = 'Nov'; break;
-      case 2: text = 'Dec'; break;
-      case 3: text = 'Jan'; break;
-      default: text = '';
-    }
-    return SideTitleWidget(axisSide: meta.axisSide, child: Text(text, style: style));
+
+  Widget _buildDailyMealStats() {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _apiService.getDailyMealStats(today),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        final data = snapshot.data!;
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange[50], // Changed from deepPurple[50]
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   const Text("Today's Dining Count", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepOrange)), // Changed from deepPurple
+                   Text(today, style: const TextStyle(fontSize: 12, color: Colors.deepOrange)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   _buildMealCountItem("Breakfast", data['breakfast']['eating'], data['breakfast']['opt_out'], Icons.breakfast_dining),
+                   _buildMealCountItem("Lunch", data['lunch']['eating'], data['lunch']['opt_out'], Icons.lunch_dining),
+                   _buildMealCountItem("Dinner", data['dinner']['eating'], data['dinner']['opt_out'], Icons.dinner_dining),
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  BarChartGroupData _makeBarGroup(int x, double y, Color color) {
-    return BarChartGroupData(x: x, barRods: [BarChartRodData(toY: y, color: color, width: 16)]);
+  Widget _buildMealCountItem(String label, int eating, int optOut, IconData icon) {
+    return Column(
+      children: [
+        CircleAvatar(backgroundColor: Colors.white, radius: 24, child: Icon(icon, color: Colors.deepOrange)), // Changed from deepPurple
+        const SizedBox(height: 8),
+        Text('$eating', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepOrange)), // Changed from green
+        Text("Eating", style: TextStyle(fontSize: 10, color: Colors.orange[800])), // Changed from green[800]
+        const SizedBox(height: 4),
+        if (optOut > 0)
+          Text('($optOut Skipping)', style: const TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.bold))
+        else
+          const Text('All Eating', style: TextStyle(fontSize: 11, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
   }
-*/
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -297,6 +346,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             }
                           },
                         ),
+
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          label: const Text('Delete Menu for Day', style: TextStyle(color: Colors.red)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () async {
+                             try {
+                               await _apiService.deleteFoodMenu(selectedDay);
+                               if (!mounted) return;
+                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Menu for $selectedDay deleted')));
+                               breakfastCtrl.clear(); lunchCtrl.clear(); dinnerCtrl.clear();
+                             } catch(e) {
+                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                             }
+                          },
+                        ),
                       )
                    ],
                  ),
@@ -412,6 +485,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ],
         ),
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red),
             onPressed: () async {

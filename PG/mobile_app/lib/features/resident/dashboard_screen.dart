@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:flutter/services.dart'; // For Clipboard
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/api_service.dart';
 import '../complaints/complaints_list_screen.dart';
 import '../food/food_menu_screen.dart';
+import '../common/notifications_screen.dart';
+import '../common/notification_bell.dart';
+import 'meal_attendance_screen.dart';
+import 'settings_screen.dart';
 // import 'package:fl_chart/fl_chart.dart';
 
 class ResidentDashboard extends StatefulWidget {
@@ -50,11 +55,22 @@ class _ResidentDashboardState extends State<ResidentDashboard> {
             ],
           ),
           const SizedBox(height: 16),
+
           Row(
             children: [
                Expanded(child: _buildQuickAction(Icons.restaurant_menu, 'Check Menu', Colors.blue, () => setState(() => _selectedIndex = 2))),
                const SizedBox(width: 16),
-               Expanded(child: _buildQuickAction(Icons.exit_to_app, 'Leave PG', Colors.red, _confirmLeavePG)),
+               Expanded(child: _buildQuickAction(Icons.no_meals, 'Eat Outside', Colors.redAccent, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (c) => const MealAttendanceScreen()));
+               })),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+               Expanded(child: _buildQuickAction(Icons.exit_to_app, 'Leave PG', Colors.grey, _confirmLeavePG)),
+               const SizedBox(width: 16),
+               Expanded(child: Container()), // Spacer
             ],
           ),
         ],
@@ -109,24 +125,54 @@ class _ResidentDashboardState extends State<ResidentDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter amount')));
       return;
     }
-    // Using a generic UPI intent. Android chooses the app (PhonePe/GPay).
-    // Replace 'admin@upi' with real ID if available.
-    final upiUrl = 'upi://pay?pa=6300243051-3@ybl&pn=SmartPG&am=$amount&cu=INR';
-    final uri = Uri.parse(upiUrl);
-    
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UPI Deep linking works on Mobile App only. Please scan QR Code.')));
-      return;
-    }
 
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        throw 'Could not launch UPI app';
+    // 1. Copy Admin Phone to Clipboard
+    const adminPhone = "6300243051";
+    await Clipboard.setData(const ClipboardData(text: adminPhone));
+    
+    if (!mounted) return;
+
+    // 2. Show Instruction Dialog
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text("Complete Payment"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min, 
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Admin Phone '$adminPhone' copied to clipboard.", style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            const Text("1. Open PhonePe / GPay."),
+            Text("2. Pay ₹$amount to this number."),
+            const Text("3. Copy the UTR / Ref Number."),
+            const Text("4. Paste it below and click Submit."),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitPayment(String amount, String txnId) async {
+      try {
+        await _apiService.createPayment(
+          int.parse(amount),
+          txnId,
+        );
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment Submitted! Waiting Approval.')));
+        setState(() {}); 
+      } catch (e) {
+         if (!mounted) return;
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
-    } catch (e) {
-      // On emulator or if no app found
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error or No UPI App found: $e')));
-    }
   }
 
   Future<void> _confirmLeavePG() async {
@@ -184,23 +230,18 @@ class _ResidentDashboardState extends State<ResidentDashboard> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.payment),
-                        label: const Text('Pay with PhonePe / UPI'),
+                        icon: const Icon(Icons.content_copy),
+                        label: const Text('Copy Number to Pay on PhonePe'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple, 
+                          backgroundColor: Colors.blue[700], 
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () => _launchUPI(amountController.text),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: txnController,
-                      decoration: const InputDecoration(labelText: 'Transaction ID / UPI Ref', border: OutlineInputBorder(), prefixIcon: Icon(Icons.receipt)),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Scan to Pay:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 24),
+                    const Text('Or Scan QR Code:', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     FutureBuilder<String?>(
                       future: _apiService.getToken(), // Just to get a trigger, actually we construct URL directly
@@ -220,31 +261,29 @@ class _ResidentDashboardState extends State<ResidentDashboard> {
                         );
                       }
                     ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: txnController,
+                      decoration: const InputDecoration(labelText: 'Please enter UTR number', border: OutlineInputBorder(), prefixIcon: Icon(Icons.receipt)),
+                    ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if (amountController.text.isEmpty || txnController.text.isEmpty) return;
-                          try {
-                            await _apiService.createPayment(
-                              int.parse(amountController.text),
-                              txnController.text,
-                            );
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment Submitted!')));
-                            amountController.clear();
-                            txnController.clear();
-                            setState(() {}); // Refresh list
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          if (amountController.text.isEmpty || txnController.text.isEmpty) {
+                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter Amount & UTR')));
+                             return;
                           }
+                          await _submitPayment(amountController.text, txnController.text);
+                          amountController.clear();
+                          txnController.clear();
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                         child: const Text('Submit Payment', style: TextStyle(fontSize: 16)),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -353,11 +392,11 @@ class _ResidentDashboardState extends State<ResidentDashboard> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          const NotificationBell(),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _apiService.storage.deleteAll();
-              if (mounted) Navigator.pushReplacementNamed(context, '/login');
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (c) => const SettingsScreen()));
             },
           ),
         ],
