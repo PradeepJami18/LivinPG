@@ -4,8 +4,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
+import os
+
 # ---------------- CONFIG ----------------
-SECRET_KEY = "smartpgsecret"
+SECRET_KEY = os.getenv("SECRET_KEY", "smartpgsecret")
 ALGORITHM = "HS256"
 
 security = HTTPBearer()

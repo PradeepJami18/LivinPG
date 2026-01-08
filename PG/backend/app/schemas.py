@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
     id: int
     full_name: str | None = None
     email: EmailStr
+    phone: str | None = None
     role: str
     status: str | None = "Active"
     created_at: datetime | None = None
@@ -63,5 +64,19 @@ class PaymentResponse(BaseModel):
     status: str
     created_at: datetime
 
+
     class Config:
         orm_mode = True
+
+class MealAttendanceUpdate(BaseModel):
+    date: str # YYYY-MM-DD
+    breakfast: bool
+    lunch: bool
+    dinner: bool
+
+class MealAttendanceResponse(BaseModel):
+    date: str
+    breakfast: bool
+    lunch: bool
+    dinner: bool
+

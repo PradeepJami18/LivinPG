@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.models import Payment, User, Complaint
+from app.models import Payment, User, Complaint, Notification
 from app.schemas import PaymentCreate, PaymentResponse
 from app.auth import get_current_user
 
@@ -26,6 +26,24 @@ def submit_payment(
     db.add(payment)
     db.commit()
     db.refresh(payment)
+
+    # --- Notification Logic ---
+    try:
+        # Notify all admins
+        admins = db.query(User).filter(User.role == "admin").all()
+        for admin in admins:
+            new_notif = Notification(
+                user_id=admin.id,
+                title="New Payment Received",
+                message=f"Resident {current_user.get('user_id')} sent payment of amount {data.amount}",
+                type="payment"
+            )
+            db.add(new_notif)
+        db.commit()
+    except Exception as e:
+        print(f"Notification Error: {e}")
+        # Don't fail the payment if notification fails
+
     return payment
 
 # -------------------------------
@@ -81,6 +99,20 @@ def approve_payment(
     
     payment.status = "Approved"
     db.commit()
+
+    # Notify Resident
+    try:
+        notif = Notification(
+            user_id=payment.user_id,
+            title="Payment Approved",
+            message=f"Your payment of ₹{payment.amount} has been approved.",
+            type="payment"
+        )
+        db.add(notif)
+        db.commit()
+    except Exception as e:
+        print(f"Notification Error: {e}")
+
     return {"message": "Payment Approved"}
 
 # -------------------------------

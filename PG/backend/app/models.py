@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -47,3 +47,31 @@ class Payment(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     user = relationship("User")
+
+class MealAttendance(Base):
+    __tablename__ = "meal_attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    date = Column(Date, nullable=False)
+    
+    # Defaults to True (Eating), User sets to False (Opt-out)
+    breakfast = Column(Boolean, default=True) 
+    lunch = Column(Boolean, default=True)
+    dinner = Column(Boolean, default=True)
+
+    user = relationship("User")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    title = Column(String(100))
+    message = Column(String(255))
+    type = Column(String(50), default="info") # payment, complaint, system
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User")
+

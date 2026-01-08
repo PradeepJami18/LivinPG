@@ -26,6 +26,10 @@ app.include_router(users_router)
 app.include_router(complaints_router)
 app.include_router(foodmenu_router)
 app.include_router(payments_router)
+from app.routers.attendance import router as attendance_router
+app.include_router(attendance_router)
+from app.routers.notifications import router as notifications_router
+app.include_router(notifications_router)
 from app.routers.admin import router as admin_router
 app.include_router(admin_router)
 
@@ -70,9 +74,16 @@ def root():
     return {"message": "Smart PG Backend Running"}
 
 from sqlalchemy import text
+from fastapi import Depends
+from app.auth import get_current_user
 
 @app.get("/fix-db-schema")
-def fix_db_schema():
+def fix_db_schema(current_user: dict = Depends(get_current_user)):
+    # Security Check
+    if current_user["role"] != "admin":
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Only Admins can reset the database schema!")
+        
     try:
         with engine.connect() as conn:
             # HARD RESET: Drop tables so they are recreated fresh with ALL columns
@@ -81,6 +92,8 @@ def fix_db_schema():
             conn.execute(text("DROP TABLE IF EXISTS complaints CASCADE;"))
             conn.execute(text("DROP TABLE IF EXISTS payments CASCADE;"))
             conn.execute(text("DROP TABLE IF EXISTS food_menu CASCADE;"))
+            conn.execute(text("DROP TABLE IF EXISTS meal_attendance CASCADE;"))
+            conn.execute(text("DROP TABLE IF EXISTS notifications CASCADE;"))
             conn.commit()
         
         # Recreate everything

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import User, Complaint, Payment
+from app.models import User, Complaint, Payment, Notification
 from app.schemas import UserCreate, UserLogin, UserResponse
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 
@@ -52,6 +52,16 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         print(f"LOGIN CRASH: {e}")
         raise HTTPException(status_code=500, detail=f"Login Crash: {str(e)}")
 
+@router.get("/me", response_model=UserResponse)
+def get_my_profile(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user = db.query(User).filter(User.id == current_user["user_id"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 @router.get("/residents", response_model=list[UserResponse])
 def get_residents(
     db: Session = Depends(get_db),
@@ -62,6 +72,7 @@ def get_residents(
         raise HTTPException(status_code=403, detail="Admin access required")
         
     return db.query(User).filter(User.role == "resident").all()
+
 
 
 
@@ -99,6 +110,22 @@ def leave_pg(
     
     user.status = "Notice"
     db.commit()
+
+    # Create Notification for Admins
+    try:
+        admins = db.query(User).filter(User.role == "admin").all()
+        for admin in admins:
+            new_notif = Notification(
+                user_id=admin.id,
+                title="Resident Leaving",
+                message=f"Resident {user.full_name} has requested to leave (Notice Period).",
+                type="alert"
+            )
+            db.add(new_notif)
+        db.commit()
+    except Exception as e:
+        print(f"Notification Error: {e}")
+
     return {"message": "You have successfully marked yourself as leaving (Notice Period)."}
 
 
